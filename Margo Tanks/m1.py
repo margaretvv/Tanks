@@ -1,6 +1,7 @@
 from pygame import *
 import sys
 import random
+from time import sleep 
 
 init()
 
@@ -10,7 +11,12 @@ TILE_SIZE = 32
 SCREEN = display.set_mode((WIDTH, HEIGHT))
 FPS = 60
 CLOCK = time.Clock()
+score=0
+font.init()
 FONT = font.SysFont('Arial', 24)
+font2= font.SysFont('Arial', 110)
+win=font2.render('YOU WIN', True, (2,245,19)) 
+lose=font2.render('YOU LOSE', True,(156,2,2))
 
 # Load images
 brick = transform.scale(image.load('brick.png'), (TILE_SIZE, TILE_SIZE))
@@ -121,6 +127,7 @@ class Tank(sprite.Sprite):
         self.projectiles.append(projectile)
 
     def update_projectiles(self, map_data, enemy_group):
+        global score
         for projectile in self.projectiles[:]:
             if projectile.update(map_data):
                 self.projectiles.remove(projectile)
@@ -129,11 +136,15 @@ class Tank(sprite.Sprite):
                 if hit_enemy:
                     self.projectiles.remove(projectile)
                     enemy_group.remove(hit_enemy)
-
+                    score += 250
+ 
     def take_damage(self):
         self.health -= 1
         if self.health <= 0:
             print("Game Over")
+            SCREEN.blit(lose, (80,60))
+            display.update()
+            sleep(7)
             quit()
 
 # Projectile class
@@ -180,7 +191,7 @@ class EnemyTank(Tank):
         self.move(self.direction[0], self.direction[1], map_data)
 
     def shoot(self):
-        if random.random() < 0.1:  # Random chance to shoot
+        if random.random() < 0.04:  # Random chance to shoot
             super().shoot()
 
 # Draw map function
@@ -213,7 +224,7 @@ used_tiles.add((spawn_x, spawn_y))
 player_tank = Tank(spawn_x, spawn_y, player_img)
 
 enemy_group = sprite.Group()
-for _ in range(15):  # Create 5 enemy tanks
+for _ in range(10):  # Create 5 enemy tanks
     enemy_spawn_x, enemy_spawn_y = find_empty_tile(map_data, used_tiles)
     used_tiles.add((enemy_spawn_x, enemy_spawn_y))
     enemy_tank = EnemyTank(enemy_spawn_x, enemy_spawn_y, random.choice(enemy_img))
@@ -261,7 +272,10 @@ while running:
     # Draw health label
     health_label = FONT.render(f'Health: {player_tank.health}', True, (255, 255, 255))
     SCREEN.blit(health_label, (WIDTH - health_label.get_width() - 10, 10))
-
+    score_label = FONT.render(f'score: {score}', True, (255,255,255))
+    SCREEN.blit(score_label, (WIDTH - score_label.get_width() - 10, 40))
+    if len(enemy_group) <= 0:
+        SCREEN.blit(win, (80,60))  
     display.update()
     CLOCK.tick(FPS)
 
